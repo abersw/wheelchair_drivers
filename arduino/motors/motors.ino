@@ -184,10 +184,10 @@ void setupSerial() {
 
 
 void loop() {
-	/*if (!rosConnected()) {
+	if (!rosConnected()) {
 		haltRobot();
 	}
-	nh.spinOnce();*/
+	nh.spinOnce();
 }
 
 
