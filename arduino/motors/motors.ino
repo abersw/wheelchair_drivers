@@ -1,9 +1,128 @@
 #include <ros.h>
 #include <geometry_msgs/Twist.h>
+#include <std_msgs/String.h>
 #include <math.h>
 #include <SoftwareSerial.h>
 #include <Sabertooth.h>
 
+// Define Motor Serial Tx Pin
+const byte motorPin = 10;
+
+// Define Lower Relay Pins
+// Motor Relay-22, Unused-23
+// Infrared Relay-24, IMU/Fall Sensor Relay-25
+const byte lowerRelayPins[] = {22, 23, 24, 25};
+
+
+// Define Upper Relay Pins
+// Slam Device Relay-26, Upper Lights Relay-27
+// Lower Lights Relay-28, Unused-29
+const byte upperRelayPins[] = {26, 27, 28, 29};
+
+const byte SBT_MIN = 10;
+const byte SBT_RANGE = 100;
+
+SoftwareSerial SWSerial(NOT_A_PIN, motorPin);
+Sabertooth ST(128,SWSerial);
+
+
+// Declare functions
+void setupPins();
+void setupSerial();
+void setupWiFi();
+bool rosConnected();
+void onTwist(const geometry_msgs::Twist &msg);
+float mapPwm(float x, float out_min, float out_max);
+
+ros::NodeHandle nh;
+ros::Subscriber<geometry_msgs::Twist> sub("/wheelchair_robot/cmd_vel", &onTwist);
+std_msgs::String str_msg;
+ros::Publisher chatter("arduino", &str_msg);
+
+bool _connected = false;
+
+
+void setup() {
+	//here
+	setupPins();
+	setupSerial();
+	nh.initNode();
+  nh.advertise(chatter);
+	nh.subscribe(sub);
+	haltRobot();
+	digitalWrite(lowerRelayPins[0], LOW);
+  //delay(1000);
+}
+
+void loop() {
+	//here too
+	/*if (!rosConnected()) {
+		haltRobot();
+	}*/
+    
+  	nh.spinOnce();
+}
+
+void setupPins() {
+	pinMode(LED_BUILTIN, OUTPUT);
+	for (int i = 0; i < 4; i++) {
+		pinMode(lowerRelayPins[i], OUTPUT);
+		digitalWrite(lowerRelayPins[i], HIGH); //high is low!!
+	}
+}
+
+void setupSerial() {
+	Serial.begin(115200);
+}
+
+void onTwist(const geometry_msgs::Twist &msg) {
+	//if (!_connected) {
+		//haltRobot();
+	//	return;
+	//}
+	
+	// Cap values at [-1 .. 1]
+	float x = max(min(msg.linear.x, 1.0f), -1.0f);
+	float z = max(min(msg.linear.z, 1.0f), -1.0f);
+
+	// Calculate the intensity of left and right wheels. Simple version.
+	// Taken from https://hackernoon.com/unicycle-to-differential-drive-courseras-control-of-mobile-robots-with-ros-and-rosbots-part-2-6d27d15f2010#1e59
+	float l = (msg.linear.x - msg.angular.z) / 2; //switches direction modes
+	float r = (msg.linear.x + msg.angular.z) / 2; //what about dynamic 127:0:127?
+
+	// Then map those values to PWM intensities. PWMRANGE = full speed, while PWM_MIN = the minimal amount of power at which the motors begin moving.
+	uint16_t lpwr = mapPwr(fabs(l), SBT_MIN, SBT_RANGE);
+	uint16_t rpwr = mapPwr(fabs(r), SBT_MIN, SBT_RANGE);
+
+	ST.motor(1, (int)lpwr);
+	ST.motor(2, (int)rpwr);
+
+  str_msg.data = lpwr;
+  chatter.publish( &str_msg );
+}
+
+bool rosConnected() {
+	bool connected = nh.connected();
+	if (_connected != connected) {
+		_connected = connected;
+		digitalWrite(LED_BUILTIN, !connected);
+		Serial.println(connected ? "ROS connected" : "ROS disconnected");
+	}
+	return connected;
+}
+
+float mapPwr(float x, float out_min, float out_max) {
+	return x * (out_max - out_min) + out_min;
+}
+
+void haltRobot(){
+	digitalWrite(lowerRelayPins[0], HIGH);
+	ST.stop(); //stop sabertooth connection
+}
+
+
+
+/*
 ros::NodeHandle nh;
 bool _connected = false;
 
@@ -121,7 +240,7 @@ void onTwist(const geometry_msgs::Twist &msg)
   digitalWrite(R_BACK, r < 0);
   analogWrite(L_PWM, lPwm);
   analogWrite(R_PWM, rPwm);*/
-  digitalWrite(lowerRelayPins[0], LOW);
+  /*digitalWrite(lowerRelayPins[0], LOW);
   ST.motor(1, (int)l);
   ST.motor(2, (int)r);
   
@@ -157,7 +276,7 @@ void setup() {
 	*/
 	/*
 	Serial.println("inside loop");
-	digitalWrite(lowerRelayPins[0], HIGH);
+	digitalWrite(lowerRelayPins[0], LOW);
 	for (int i = 0; i < 50; i++){
 		Serial.println(i);
 		ST.motor(1, (int)i);
@@ -165,7 +284,7 @@ void setup() {
   		delay(500);
 	}
 	digitalWrite(lowerRelayPins[0], HIGH);
-	delay(5000);*/
+	delay(5000);*//*
 }
 
 void setupPins() {
@@ -184,13 +303,13 @@ void setupSerial() {
 
 
 void loop() {
-	if (!rosConnected()) {
+	/*if (!rosConnected()) {
 		haltRobot();
 	}
-	nh.spinOnce();
+	nh.spinOnce();*//*
 }
 
 
 void haltRobot(){
   ST.stop(); //stop sabertooth connection
-}
+}*/
