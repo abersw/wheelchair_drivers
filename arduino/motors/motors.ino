@@ -1,6 +1,7 @@
 #include <ros.h>
 #include <geometry_msgs/Twist.h>
-#include <std_msgs/String.h>
+//#include <std_msgs/String.h>
+#include <std_msgs/Int16.h>
 #include <math.h>
 #include <SoftwareSerial.h>
 #include <Sabertooth.h>
@@ -19,7 +20,7 @@ const byte lowerRelayPins[] = {22, 23, 24, 25};
 // Lower Lights Relay-28, Unused-29
 const byte upperRelayPins[] = {26, 27, 28, 29};
 
-const byte SBT_MIN = 10;
+const byte SBT_MIN = 0;
 const byte SBT_RANGE = 100;
 
 SoftwareSerial SWSerial(NOT_A_PIN, motorPin);
@@ -36,7 +37,7 @@ float mapPwm(float x, float out_min, float out_max);
 
 ros::NodeHandle nh;
 ros::Subscriber<geometry_msgs::Twist> sub("/wheelchair_robot/cmd_vel", &onTwist);
-std_msgs::String str_msg;
+std_msgs::Int16 str_msg;
 ros::Publisher chatter("arduino", &str_msg);
 
 bool _connected = false;
@@ -50,7 +51,7 @@ void setup() {
   nh.advertise(chatter);
 	nh.subscribe(sub);
 	haltRobot();
-	digitalWrite(lowerRelayPins[0], LOW);
+	//digitalWrite(lowerRelayPins[0], LOW);
   //delay(1000);
 }
 
@@ -59,7 +60,8 @@ void loop() {
 	/*if (!rosConnected()) {
 		haltRobot();
 	}*/
-    
+    //digitalWrite(lowerRelayPins[0], LOW);
+  //ST.motor(1, (int)40);
   	nh.spinOnce();
 }
 
@@ -72,6 +74,8 @@ void setupPins() {
 }
 
 void setupSerial() {
+  SWSerial.begin(38400);
+  haltRobot();
 	Serial.begin(115200);
 }
 
@@ -94,8 +98,11 @@ void onTwist(const geometry_msgs::Twist &msg) {
 	uint16_t lpwr = mapPwr(fabs(l), SBT_MIN, SBT_RANGE);
 	uint16_t rpwr = mapPwr(fabs(r), SBT_MIN, SBT_RANGE);
 
-	ST.motor(1, (int)lpwr);
-	ST.motor(2, (int)rpwr);
+	digitalWrite(lowerRelayPins[0], LOW);
+  ST.motor(1, lpwr);
+	ST.motor(2, rpwr);
+  
+  //ST.motor(1, (int)40);
 
   str_msg.data = lpwr;
   chatter.publish( &str_msg );
