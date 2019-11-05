@@ -37,8 +37,10 @@ float mapPwm(float x, float out_min, float out_max);
 
 ros::NodeHandle nh;
 ros::Subscriber<geometry_msgs::Twist> sub("/wheelchair_robot/cmd_vel", &onTwist);
-std_msgs::Int16 str_msg;
-ros::Publisher chatter("arduino", &str_msg);
+std_msgs::Int16 lw_msg;
+std_msgs::Int16 rw_msg;
+ros::Publisher arduinolw("/arduino/lw", &lw_msg);
+ros::Publisher arduinorw("/arduino/rw", &rw_msg);
 
 bool _connected = false;
 
@@ -48,7 +50,8 @@ void setup() {
 	setupPins();
 	setupSerial();
 	nh.initNode();
-  nh.advertise(chatter);
+  nh.advertise(arduinolw);
+  nh.advertise(arduinorw);
 	nh.subscribe(sub);
 	haltRobot();
 	//digitalWrite(lowerRelayPins[0], LOW);
@@ -97,6 +100,8 @@ void onTwist(const geometry_msgs::Twist &msg) {
 	// Then map those values to PWM intensities. PWMRANGE = full speed, while PWM_MIN = the minimal amount of power at which the motors begin moving.
 	uint16_t lpwr = mapPwr(fabs(l), SBT_MIN, SBT_RANGE);
 	uint16_t rpwr = mapPwr(fabs(r), SBT_MIN, SBT_RANGE);
+  //uint16_t lpwr = map(fabs(l), 0, 1.22, 0, 100);
+  //uint16_t rpwr = map(fabs(r), 0, 1.22, 0, 100);
 
 	digitalWrite(lowerRelayPins[0], LOW);
   ST.motor(1, lpwr);
@@ -104,8 +109,10 @@ void onTwist(const geometry_msgs::Twist &msg) {
   
   //ST.motor(1, (int)40);
 
-  str_msg.data = lpwr;
-  chatter.publish( &str_msg );
+  lw_msg.data = lpwr;
+  rw_msg.data = rpwr;
+  arduinolw.publish( &lw_msg );
+  arduinorw.publish( &rw_msg);
 }
 
 bool rosConnected() {
