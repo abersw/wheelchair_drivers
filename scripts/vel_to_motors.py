@@ -22,6 +22,7 @@
 import rospy
 import roslib
 from std_msgs.msg import Float32
+from wheelchair_msgs.msg import wheelVels #import the wheelchair messages thingy
 from geometry_msgs.msg import Twist 
 
 #############################################################
@@ -40,8 +41,9 @@ class VelToDiffDrive():
         #self.w = rospy.get_param("~base_width", 0.2)
         self.w = 0.28
     
-        self.pub_lmotor = rospy.Publisher('lwheel_vtarget', Float32, queue_size=1)
-        self.pub_rmotor = rospy.Publisher('rwheel_vtarget', Float32, queue_size=1)
+        #self.pub_lmotor = rospy.Publisher('lwheel_vtarget', Float32, queue_size=1)
+        #self.pub_rmotor = rospy.Publisher('rwheel_vtarget', Float32, queue_size=1)
+        self.pub_motor = rospy.Publisher('motor_commands', wheelVels, queue_size=1)
         rospy.Subscriber('/wheelchair_robot/cmd_vel', Twist, self.twistCallback, queue_size=1)
     
     
@@ -78,8 +80,9 @@ class VelToDiffDrive():
         self.left = 1.0 * self.dx - self.dr * self.w / 2
         # rospy.loginfo("publishing: (%d, %d)", left, right) 
                 
-        self.pub_lmotor.publish(self.left)
-        self.pub_rmotor.publish(self.right)
+        self.pub_motor.publish(self.left, self.right)
+        #self.pub_motor.publish()
+        #self.pub_motor.publish(self.right)
             
         self.ticks_since_target += 1
 
