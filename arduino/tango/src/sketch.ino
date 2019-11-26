@@ -119,7 +119,10 @@ void setupPins() {
 	for (int i = 0; i < 4; i++) {
 		pinMode(lowerRelayPins[i], OUTPUT);
 		digitalWrite(lowerRelayPins[i], HIGH); //high is low!!
+		pinMode(upperRelayPins[i], OUTPUT);
+		digitalWrite(upperRelayPins[i], HIGH); //high is low!!
 	}
+	digitalWrite(26, LOW);
 }
 
 void setupSerial() {
