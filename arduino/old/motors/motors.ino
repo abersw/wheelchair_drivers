@@ -1,13 +1,14 @@
-#include <ros.h>
+#include <ros.h> //main ros cpp
 #include <ros/time.h>
-#include <geometry_msgs/Twist.h>
-#include <wheelchair_msgs/wheelVels.h>
+//#include <geometry_msgs/Twist.h> //twist messages
+#include <wheelchair_msgs/wheelVels.h> //wheel messages from roscore
 //#include <std_msgs/String.h>
 #include <std_msgs/Int16.h>
 #include <std_msgs/Float32.h>
-#include <math.h>
+//#include <math.h>
 #include <SoftwareSerial.h>
-#include <Sabertooth.h>
+#include <Sabertooth.h> //motor controller library
+#include <sensor_msgs/Imu.h> //imu messages
 
 // Define Motor Serial Tx Pin
 const byte motorPin = 10;
