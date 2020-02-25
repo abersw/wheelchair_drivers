@@ -40,7 +40,7 @@ void loop(void) {
     FB_voltageRead = (FB_adcValueRead * 5.0 )/ 1024.0;
 
 
-    uint32_t RL_dac_value = 4000;
+    uint32_t RL_dac_value = 2250;
     int RL_adcValueRead = 0;
     float RL_voltageRead = 0;
     float RL_dac_expected_output;
