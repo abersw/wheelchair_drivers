@@ -44,6 +44,98 @@ ros::Publisher arduinorw("/arduino/rw", &rw_msg);
 bool _connected = false;
 
 
+void rMotorCmdsCb(const geometry_msgs::Twist &msg) {
+  //float x = max(min(motor_commands_msg.leftVel, 1.0f), -1.0f);
+  //float z = max(min(motor_commands_msg.rightVel, 1.0f), -1.0f);
+  // Cap values at [-1 .. 1]
+  float x = max(min(msg.linear.x, 1.0f), -1.0f);
+  float z = max(min(msg.angular.z, 1.0f), -1.0f);
+  long xcast = long(msg.linear.x * 1000);
+  long zcast = long(msg.angular.z * 1000);
+  float xnew = xcast + 2200;
+  float znew = zcast + 2200;
+  //float xnew = map (msg.linear.x, -1.0, 1.0, 0, 4096);
+  //float tmp = map(msg.linear.x, 0.0, 1.0, 2200, 4096);
+  //float xnew = msg.linear.x * 2200; //2250 is 6v
+
+  // Calculate the intensity of left and right wheels. Simple version.
+  // Taken from https://hackernoon.com/unicycle-to-differential-drive-courseras-control-of-mobile-robots-with-ros-and-rosbots-part-2-6d27d15f2010#1e59
+  //float l = (msg.linear.x - msg.angular.z) / 2;
+  //float r = (msg.linear.x + msg.angular.z) / 2;
+
+  //max lienar velocity from teleop is 1.22
+  //min linear velocity from teleop is -1.22
+  //max angular velocity from teleop is 2.84
+  //min angular velocity from teleop is -2.84
+
+  uint32_t FB_dac_value = xnew;
+  //uint32_t FB_dac_value = 2250;
+  int FB_adcValueRead = 0;
+  float FB_voltageRead = 0;
+  float FB_dac_expected_output;
+
+  FB_dac_expected_output = (5.0 / 4096.0) * FB_dac_value;
+  FB_dac.setVoltage(FB_dac_value, false);
+  delay(250);
+  FB_adcValueRead = analogRead(FB_voltsIn);
+  FB_voltageRead = (FB_adcValueRead * 5.0 ) / 1024.0;
+
+  uint32_t RL_dac_value = znew;
+  //uint32_t RL_dac_value = 2250;
+  int RL_adcValueRead = 0;
+  float RL_voltageRead = 0;
+  float RL_dac_expected_output;
+
+  RL_dac_expected_output = (5.0 / 4096.0) * FB_dac_value;
+  RL_dac.setVoltage(RL_dac_value, false);
+  delay(250);
+  RL_adcValueRead = analogRead(RL_voltsIn);
+  RL_voltageRead = (RL_adcValueRead * 5.0 ) / 1024.0;
+
+  //lw_msg.data = FB_voltageRead;
+  //rw_msg.data = RL_voltageRead;
+  lw_msg.data = xnew;
+  rw_msg.data = znew;
+  arduinolw.publish( &lw_msg );
+  arduinorw.publish( &rw_msg);
+
+  // Calculate the intensity of left and right wheels. Simple version.
+  // Taken from https://hackernoon.com/unicycle-to-differential-drive-courseras-control-of-mobile-robots-with-ros-and-rosbots-part-2-6d27d15f2010#1e59
+  //float l = (msg.linear.x - msg.angular.z) / 2; //switches direction modes
+  //float r = (msg.linear.x + msg.angular.z) / 2; //what about dynamic 127:0:127?
+
+  // Then map those values to PWM intensities. PWMRANGE = full speed, while PWM_MIN = the minimal amount of power at which the motors begin moving.
+
+
+  /*  uint16_t lpwr = mapPwr(x, motorStopValue, motorMaxValue);
+    uint16_t rpwr = mapPwr(z, motorStopValue, motorMaxValue);
+    //float lpwr = map(lw, 0, 1.22, 0, 100);
+    //uint16_t rpwr = map(fabs(r), 0, 1.22, 0, 100);
+
+
+    //ST.motor(1, (int)lpwr);
+    //ST.motor(2, (int)rpwr);
+
+    //ST.motor(1, (int)40);
+
+    lw_msg.data = lpwr;
+    rw_msg.data = rpwr;
+    arduinolw.publish( &lw_msg );
+    arduinorw.publish( &rw_msg);
+
+    if ((lpwr == 128) && (rpwr == 128)) {
+      digitalWrite(motorRelay, LOW);
+    }
+    else {*/
+  /*digitalWrite(motorRelay, HIGH);
+    analogWrite(leftMotor, lpwr);
+    analogWrite(rightMotor, rpwr);*/
+  //}
+
+
+}
+
+
 void setup() {
   //here
   FB_dac.begin(0x60); // The I2C Address: Run the I2C Scanner if you're not sure
@@ -85,87 +177,6 @@ void setupSerial() {
   Serial.begin(115200);
 }
 
-void rMotorCmdsCb(const geometry_msgs::Twist &msg) {
-  //float x = max(min(motor_commands_msg.leftVel, 1.0f), -1.0f);
-  //float z = max(min(motor_commands_msg.rightVel, 1.0f), -1.0f);
-  // Cap values at [-1 .. 1]
-  float x = max(min(msg.linear.x, 1.0f), -1.0f);
-  float z = max(min(msg.angular.z, 1.0f), -1.0f);
-
-  // Calculate the intensity of left and right wheels. Simple version.
-  // Taken from https://hackernoon.com/unicycle-to-differential-drive-courseras-control-of-mobile-robots-with-ros-and-rosbots-part-2-6d27d15f2010#1e59
-  //float l = (msg.linear.x - msg.angular.z) / 2;
-  //float r = (msg.linear.x + msg.angular.z) / 2;
-
-  //max lienar velocity from teleop is 1.22
-  //min linear velocity from teleop is -1.22
-  //max angular velocity from teleop is 2.84
-  //min angular velocity from teleop is -2.84
-
-  uint32_t FB_dac_value = x;
-  //uint32_t FB_dac_value = 2250;
-  int FB_adcValueRead = 0;
-  float FB_voltageRead = 0;
-  float FB_dac_expected_output;
-
-  FB_dac_expected_output = (5.0 / 4096.0) * FB_dac_value;
-  FB_dac.setVoltage(FB_dac_value, false);
-  delay(250);
-  FB_adcValueRead = analogRead(FB_voltsIn);
-  FB_voltageRead = (FB_adcValueRead * 5.0 ) / 1024.0;
-
-  uint32_t RL_dac_value = z;
-  //uint32_t RL_dac_value = 2250;
-  int RL_adcValueRead = 0;
-  float RL_voltageRead = 0;
-  float RL_dac_expected_output;
-
-  RL_dac_expected_output = (5.0 / 4096.0) * FB_dac_value;
-  RL_dac.setVoltage(RL_dac_value, false);
-  delay(250);
-  RL_adcValueRead = analogRead(RL_voltsIn);
-  RL_voltageRead = (RL_adcValueRead * 5.0 ) / 1024.0;
-
-  lw_msg.data = FB_voltageRead;
-  rw_msg.data = RL_voltageRead;
-  arduinolw.publish( &lw_msg );
-  arduinorw.publish( &rw_msg);
-
-  // Calculate the intensity of left and right wheels. Simple version.
-  // Taken from https://hackernoon.com/unicycle-to-differential-drive-courseras-control-of-mobile-robots-with-ros-and-rosbots-part-2-6d27d15f2010#1e59
-  //float l = (msg.linear.x - msg.angular.z) / 2; //switches direction modes
-  //float r = (msg.linear.x + msg.angular.z) / 2; //what about dynamic 127:0:127?
-
-  // Then map those values to PWM intensities. PWMRANGE = full speed, while PWM_MIN = the minimal amount of power at which the motors begin moving.
-
-
-  /*  uint16_t lpwr = mapPwr(x, motorStopValue, motorMaxValue);
-    uint16_t rpwr = mapPwr(z, motorStopValue, motorMaxValue);
-    //float lpwr = map(lw, 0, 1.22, 0, 100);
-    //uint16_t rpwr = map(fabs(r), 0, 1.22, 0, 100);
-
-
-    //ST.motor(1, (int)lpwr);
-    //ST.motor(2, (int)rpwr);
-
-    //ST.motor(1, (int)40);
-
-    lw_msg.data = lpwr;
-    rw_msg.data = rpwr;
-    arduinolw.publish( &lw_msg );
-    arduinorw.publish( &rw_msg);
-
-    if ((lpwr == 128) && (rpwr == 128)) {
-      digitalWrite(motorRelay, LOW);
-    }
-    else {*/
-  /*digitalWrite(motorRelay, HIGH);
-    analogWrite(leftMotor, lpwr);
-    analogWrite(rightMotor, rpwr);*/
-  //}
-
-
-}
 
 
 bool rosConnected() {

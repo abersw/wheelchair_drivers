@@ -28,7 +28,7 @@ void setLeftRightDAC() {
 
 void loop(void) {
   
-    uint32_t FB_dac_value = 2250;
+    uint32_t FB_dac_value = 1375;
     int FB_adcValueRead = 0;
     float FB_voltageRead = 0;
     float FB_dac_expected_output;
@@ -40,7 +40,8 @@ void loop(void) {
     FB_voltageRead = (FB_adcValueRead * 5.0 )/ 1024.0;
 
 
-    uint32_t RL_dac_value = 2250;
+    uint32_t RL_dac_value = 1375; //2250 is 6v - 2030 is 5.8 - 1870 is 5.6 - 1780 is 5.5 - 
+    //5.4 is 1700 - 1615 is 5.3 - 1540 is 5.2 - 1375 is 5v
     int RL_adcValueRead = 0;
     float RL_voltageRead = 0;
     float RL_dac_expected_output;
