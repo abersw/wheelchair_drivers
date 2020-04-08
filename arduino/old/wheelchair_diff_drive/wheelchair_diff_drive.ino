@@ -32,6 +32,7 @@ bool rosConnected();
 //void onTwist(const geometry_msgs::Twist &msg);
 void onTwist(const std_msgs::Float32 &lw, const std_msgs::Float32 &rw);
 float mapPwm(float x, float out_min, float out_max);
+void rMotorCmdsCb(const wheelchair_msgs::wheelVels& motor_commands_msg); //added this because of error
 
 ros::NodeHandle nh;
 wheelchair_msgs::wheelVels motor_commands_msg;
