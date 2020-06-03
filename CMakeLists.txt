@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(wheelchair_drivers)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++11)
+# add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -210,7 +210,9 @@ include_directories(
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
+
 add_executable(wheelchair_vel_node src/myrobot.cpp)
 target_link_libraries(wheelchair_vel_node ${catkin_LIBRARIES})
+add_dependencies(wheelchair_vel_node ${catkin_EXPORTED_TARGETS})
 add_executable(zedodom src/zedodom.cpp)
 target_link_libraries(zedodom ${catkin_LIBRARIES})
