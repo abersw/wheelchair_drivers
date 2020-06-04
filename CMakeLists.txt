@@ -16,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   hardware_interface
   controller_manager
+  wheelchair_msgs
 )
 
 ## System dependencies are found with CMake's conventions

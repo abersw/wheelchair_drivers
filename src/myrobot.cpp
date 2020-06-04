@@ -1,7 +1,7 @@
 #include "MyRobot.hpp"
 #include "controller_manager/controller_manager.h"
 #include "hardware_interface/actuator_state_interface.h"
-//#include "wheelchair_msgs/wheelVels.h"
+#include "wheelchair_msgs/wheelVels.h"
 
 #include <ros/callback_queue.h>
 int main(int argc, char** argv)

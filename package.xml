@@ -60,6 +60,7 @@
   <build_export_depend>rospy</build_export_depend>
   <build_export_depend>rosserial_arduino</build_export_depend>
   <build_export_depend>std_msgs</build_export_depend>
+  <build_export_depend>wheelchair_msgs</build_export_depend>
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>tf</exec_depend>
   <exec_depend>wheelchair_msgs</exec_depend>
