@@ -11,9 +11,13 @@ int main(int argc, char** argv)
   ros::CallbackQueue queue;
   nh.setCallbackQueue(&queue);
 
+  double leftWheelCmd;
+  double rightWheelCmd;
+
 
   MyRobot robot;
   controller_manager::ControllerManager cm(&robot,nh);
+  ros::Publisher motors_cmds_pub = nh.advertise<wheelchair_msgs::wheelVels>("motor_cmds", 1000);
 
 
   ros::AsyncSpinner spinner(4, &queue);
@@ -29,6 +33,13 @@ int main(int argc, char** argv)
      robot.read();
      cm.update(ts, d);
      robot.write();
+     leftWheelCmd = robot.getLeftWheelCmd();
+     rightWheelCmd = robot.getRightWheelCmd();
+     wheelchair_msgs::wheelVels msgs;
+     msgs.leftVel = leftWheelCmd;
+     msgs.rightVel = rightWheelCmd;
+     motors_cmds_pub.publish(msgs);
+
      rate.sleep();
   }
 

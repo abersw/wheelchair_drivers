@@ -73,9 +73,18 @@ public:
   virtual ~MyRobot()
   {}
 
+  double getLeftWheelCmd() {
+    return cmd[0];
+  }
+
+  double getRightWheelCmd() {
+    return cmd[1];
+  }
+
   void write()
   {
 	  std::cout<<"write "<<"  "<<cmd[0]<<" "<<cmd[1]<<std::endl;
+    
   }
 
   void read()
