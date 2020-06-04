@@ -11,13 +11,13 @@ int main(int argc, char** argv)
   ros::CallbackQueue queue;
   nh.setCallbackQueue(&queue);
 
-  double leftWheelCmd;
-  double rightWheelCmd;
+  double leftWheelCmd; //variable for left wheel diff drive
+  double rightWheelCmd; //variable for right wheel diff drive
 
 
   MyRobot robot;
   controller_manager::ControllerManager cm(&robot,nh);
-  ros::Publisher motors_cmds_pub = nh.advertise<wheelchair_msgs::wheelVels>("motor_cmds", 1000);
+  ros::Publisher motors_cmds_pub = nh.advertise<wheelchair_msgs::wheelVels>("motor_commands", 1000); //publish topic to arduino rosserial
 
 
   ros::AsyncSpinner spinner(4, &queue);
@@ -33,12 +33,12 @@ int main(int argc, char** argv)
      robot.read();
      cm.update(ts, d);
      robot.write();
-     leftWheelCmd = robot.getLeftWheelCmd();
-     rightWheelCmd = robot.getRightWheelCmd();
-     wheelchair_msgs::wheelVels msgs;
-     msgs.leftVel = leftWheelCmd;
-     msgs.rightVel = rightWheelCmd;
-     motors_cmds_pub.publish(msgs);
+     leftWheelCmd = robot.getLeftWheelCmd(); //get left wheel cmd
+     rightWheelCmd = robot.getRightWheelCmd(); //get right wheel cmd
+     wheelchair_msgs::wheelVels msgs; //initialise msgs for motor commands
+     msgs.leftVel = leftWheelCmd; //append left motor val
+     msgs.rightVel = rightWheelCmd; //append right motor val
+     motors_cmds_pub.publish(msgs); //publish motor commands
 
      rate.sleep();
   }
