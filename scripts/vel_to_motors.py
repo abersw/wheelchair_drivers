@@ -44,7 +44,7 @@ class VelToDiffDrive():
         #self.pub_lmotor = rospy.Publisher('lwheel_vtarget', Float32, queue_size=1)
         #self.pub_rmotor = rospy.Publisher('rwheel_vtarget', Float32, queue_size=1)
         self.pub_motor = rospy.Publisher('motor_commands', wheelVels, queue_size=1)
-        rospy.Subscriber('/wheelchair_robot/cmd_vel', Twist, self.twistCallback, queue_size=1)
+        rospy.Subscriber('/wheelchair_controller/cmd_vel', Twist, self.twistCallback, queue_size=1)
     
     
         self.rate = rospy.get_param("~rate", 50)
