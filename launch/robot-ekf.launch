@@ -1,5 +1,7 @@
 <?xml version="1.0" ?>
 <launch>
+  <remap from="/vo" to="/zed_node/odom" />	
+  <remap from="/imu_data" to="/wheelchair_robot/imu_raw" />
   <node pkg="robot_pose_ekf" type="robot_pose_ekf" name="robot_pose_ekf">
     <param name="output_frame" value="odom"/>
     <param name="freq" value="30.0"/>
@@ -10,6 +12,4 @@
     <param name="debug" value="false"/>
     <param name="self_diagnose" value="false"/>
   </node>
-<remap from="/zed_node/odom" to="/vo" />
-<remap from="/wheelchair_robot/imu_raw" to="imu_data" />
  </launch>
