@@ -7,6 +7,10 @@
 #include <std_msgs/Float32.h>
 #include <math.h>
 #include <SoftwareSerial.h>
+#include <sensor_msgs/Imu.h>
+#include <sensor_msgs/MagneticField.h>
+#include "GY_85.h"
+#include <Wire.h>
 
 /*
  * Hardware pins connected to the motor controller
@@ -23,6 +27,13 @@ const byte motorMinValue = 180;
 const byte SBT_MIN = 0;
 const byte SBT_RANGE = 150;
 
+GY_85 GY85;     //create the object
+
+#define DEBUG_ACCEL 0
+#define DEBUG_BAROM 0
+#define DEBUG_MAGNO 0
+#define DEBUG_GYROS 0
+
 
 // Declare functions
 void setupPins();
@@ -36,6 +47,7 @@ void rMotorCmdsCb(const wheelchair_msgs::wheelVels& motor_commands_msg); //added
 
 ros::NodeHandle nh;
 wheelchair_msgs::wheelVels motor_commands_msg;
+sensor_msgs::Imu  imu_msg;
 //ros::Subscriber<geometry_msgs::Twist> sub("/wheelchair_robot/cmd_vel", &onTwist);
 //ros::Subscriber<std_msgs::Float32> leftWheel("/lwheel_vtarget", &onTwist);
 //ros::Subscriber<std_msgs::Float32> rightWheel("/rwheel_vtarget", &onTwist);
@@ -45,6 +57,21 @@ std_msgs::Float32 lw_msg;
 std_msgs::Float32 rw_msg;
 ros::Publisher arduinolw("/arduino/lw", &lw_msg);
 ros::Publisher arduinorw("/arduino/rw", &rw_msg);
+ros::Publisher imuPub("/wheelchair_robot/imu_raw", &imu_msg);
+char imu_link[] = "imu";
+
+int ax;
+int ay;
+int az;
+
+int cx;
+int cy;
+int cz;
+
+float gx;
+float gy;
+float gz;
+float gt;
 
 bool _connected = false;
 
@@ -57,6 +84,11 @@ void setup() {
   nh.advertise(arduinolw);
   nh.advertise(arduinorw);
   nh.subscribe(rMotorCommands);
+  nh.advertise(imuPub);
+  Wire.begin();
+  delay(10);
+  GY85.init();
+  delay(10);
 	//nh.subscribe(leftWheel);
   //nh.subscribe(rightWheel);
 	//haltRobot();
@@ -72,6 +104,7 @@ void loop() {
 	}*/
     //digitalWrite(lowerRelayPins[0], LOW);
   //ST.motor(1, (int)40);
+    getImuData();
   	nh.spinOnce();
 }
 
@@ -126,6 +159,77 @@ void rMotorCmdsCb(const wheelchair_msgs::wheelVels& motor_commands_msg){
   }
   
   
+}
+
+void getImuData() {
+  
+  imu_msg.header.frame_id = imu_link;
+  imu_msg.header.stamp = nh.now();
+
+  //we are not providing orientation, so set to -1
+  imu_msg.orientation_covariance[0] = -1;
+
+
+  ax = GY85.accelerometer_x( GY85.readFromAccelerometer() );
+  ay = GY85.accelerometer_y( GY85.readFromAccelerometer() );
+  az = GY85.accelerometer_z( GY85.readFromAccelerometer() );
+
+  cx = GY85.compass_x( GY85.readFromCompass() );
+  cy = GY85.compass_y( GY85.readFromCompass() );
+  cz = GY85.compass_z( GY85.readFromCompass() );
+
+  gx = GY85.gyro_x( GY85.readGyro() );
+  gy = GY85.gyro_y( GY85.readGyro() );
+  gz = GY85.gyro_z( GY85.readGyro() );
+  gt = GY85.temp  ( GY85.readGyro() );
+
+
+  imu_msg.angular_velocity.x = gx * DEG_TO_RAD; //imu is mounted at 90 degrees, may need to +/- depending on axis
+  imu_msg.angular_velocity.y = gy * DEG_TO_RAD; //imu is mounted at 90 degrees, may need to +/- depending on axis
+  imu_msg.angular_velocity.z = gz * DEG_TO_RAD; //imu is mounted upsidedown, may need to +/- depending on axis
+
+  //angular velocity covariance
+  imu_msg.angular_velocity_covariance[0] = 0.003;
+  imu_msg.angular_velocity_covariance[4] = 0.003;
+  imu_msg.angular_velocity_covariance[8] = 0.003;
+
+  imu_msg.linear_acceleration.x = ax; //imu is mounted at 90 degrees, may need to +/- depending on axis
+  imu_msg.linear_acceleration.y = ay; //imu is mounted at 90 degrees, may need to +/- depending on axis
+  imu_msg.linear_acceleration.z = az; //imu is mounted at 90 degrees, may need to +/- depending on axis
+
+  imu_msg.linear_acceleration_covariance[0] = 0.1;
+  imu_msg.linear_acceleration_covariance[4] = 0.1;
+  imu_msg.linear_acceleration_covariance[8] = 0.1;
+
+  /*Serial.print  ( "accelerometer" );
+    Serial.print  ( " x:" );
+    Serial.print  ( ax );
+    Serial.print  ( " y:" );
+    Serial.print  ( ay );
+    Serial.print  ( " z:" );
+    Serial.print  ( az );
+
+    Serial.print  ( "  compass" );
+    Serial.print  ( " x:" );
+    Serial.print  ( cx );
+    Serial.print  ( " y:" );
+    Serial.print  ( cy );
+    Serial.print  (" z:");
+    Serial.print  ( cz );
+
+    Serial.print  ( "  gyro" );
+    Serial.print  ( " x:" );
+    Serial.print  ( gx );
+    Serial.print  ( " y:" );
+    Serial.print  ( gy );
+    Serial.print  ( " z:" );
+    Serial.print  ( gz );
+    Serial.print  ( " gyro temp:" );
+    Serial.println( gt );
+  */
+
+  //delay(100);             // only read every 0,5 seconds, 10ms for 100Hz, 20ms for 50Hz
+  imuPub.publish(&imu_msg);
 }
 
 
