@@ -29,6 +29,13 @@ const byte SBT_RANGE = 150;
 
 GY_85 GY85;     //create the object
 
+#define ACCEL_FACTOR                      0.000598550415   // (ADC_Value / Scale) * 9.80665            => Range : +- 2[g]
+                                                           //                                             Scale : +- 16384
+#define GYRO_FACTOR                       0.0010642        // (ADC_Value/Scale) * (pi/180)             => Range : +- 2000[deg/s]
+                                                           //                                             Scale : +- 16.4[deg/s]
+
+#define MAG_FACTOR                        15e-8
+
 #define DEBUG_ACCEL 0
 #define DEBUG_BAROM 0
 #define DEBUG_MAGNO 0
@@ -40,6 +47,7 @@ void setupPins();
 void setupSerial();
 void setupWiFi();
 bool rosConnected();
+void getImudata();
 //void onTwist(const geometry_msgs::Twist &msg);
 void onTwist(const std_msgs::Float32 &lw, const std_msgs::Float32 &rw);
 float mapPwm(float x, float out_min, float out_max);
@@ -86,9 +94,9 @@ void setup() {
   nh.subscribe(rMotorCommands);
   nh.advertise(imuPub);
   Wire.begin();
-  delay(10);
+  //delay(10);
   GY85.init();
-  delay(10);
+  //delay(10);
 	//nh.subscribe(leftWheel);
   //nh.subscribe(rightWheel);
 	//haltRobot();
@@ -167,7 +175,21 @@ void getImuData() {
   imu_msg.header.stamp = nh.now();
 
   //we are not providing orientation, so set to -1
+  //imu_msg.orientation_covariance[0] = -1;
+  imu_msg.orientation.w = -1;
+  imu_msg.orientation.x = -1;
+  imu_msg.orientation.y = -1;
+  imu_msg.orientation.z = -1;
+
   imu_msg.orientation_covariance[0] = -1;
+  imu_msg.orientation_covariance[1] = -1;
+  imu_msg.orientation_covariance[2] = -1;
+  imu_msg.orientation_covariance[3] = -1;
+  imu_msg.orientation_covariance[4] = -1;
+  imu_msg.orientation_covariance[5] = -1;
+  imu_msg.orientation_covariance[6] = -1;
+  imu_msg.orientation_covariance[7] = -1;
+  imu_msg.orientation_covariance[8] = -1;
 
 
   ax = GY85.accelerometer_x( GY85.readFromAccelerometer() );
@@ -189,18 +211,39 @@ void getImuData() {
   imu_msg.angular_velocity.z = gz * DEG_TO_RAD; //imu is mounted upsidedown, may need to +/- depending on axis
 
   //angular velocity covariance
-  imu_msg.angular_velocity_covariance[0] = 0.003;
+  /*imu_msg.angular_velocity_covariance[0] = 0.003;
   imu_msg.angular_velocity_covariance[4] = 0.003;
   imu_msg.angular_velocity_covariance[8] = 0.003;
+  */
+  imu_msg.angular_velocity_covariance[0] = 0.02;
+  imu_msg.angular_velocity_covariance[1] = 0;
+  imu_msg.angular_velocity_covariance[2] = 0;
+  imu_msg.angular_velocity_covariance[3] = 0;
+  imu_msg.angular_velocity_covariance[4] = 0.02;
+  imu_msg.angular_velocity_covariance[5] = 0;
+  imu_msg.angular_velocity_covariance[6] = 0;
+  imu_msg.angular_velocity_covariance[7] = 0;
+  imu_msg.angular_velocity_covariance[8] = 0.02;
 
   imu_msg.linear_acceleration.x = ax; //imu is mounted at 90 degrees, may need to +/- depending on axis
   imu_msg.linear_acceleration.y = ay; //imu is mounted at 90 degrees, may need to +/- depending on axis
   imu_msg.linear_acceleration.z = az; //imu is mounted at 90 degrees, may need to +/- depending on axis
 
-  imu_msg.linear_acceleration_covariance[0] = 0.1;
+  /*imu_msg.linear_acceleration_covariance[0] = 0.1;
   imu_msg.linear_acceleration_covariance[4] = 0.1;
   imu_msg.linear_acceleration_covariance[8] = 0.1;
+*/
 
+  imu_msg.linear_acceleration_covariance[0] = 0.04;
+  imu_msg.linear_acceleration_covariance[1] = 0;
+  imu_msg.linear_acceleration_covariance[2] = 0;
+  imu_msg.linear_acceleration_covariance[3] = 0;
+  imu_msg.linear_acceleration_covariance[4] = 0.04;
+  imu_msg.linear_acceleration_covariance[5] = 0;
+  imu_msg.linear_acceleration_covariance[6] = 0;
+  imu_msg.linear_acceleration_covariance[7] = 0;
+  imu_msg.linear_acceleration_covariance[8] = 0.04;
+  
   /*Serial.print  ( "accelerometer" );
     Serial.print  ( " x:" );
     Serial.print  ( ax );
