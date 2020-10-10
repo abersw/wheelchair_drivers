@@ -39,7 +39,7 @@ class VelToDiffDrive():
         rospy.loginfo("%s started" % nodename)
     
         #self.w = rospy.get_param("~base_width", 0.2)
-        self.w = 0.28
+        self.w = 0.6
     
         #self.pub_lmotor = rospy.Publisher('lwheel_vtarget', Float32, queue_size=1)
         #self.pub_rmotor = rospy.Publisher('rwheel_vtarget', Float32, queue_size=1)
