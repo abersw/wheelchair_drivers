@@ -3,6 +3,7 @@
 #include <geometry_msgs/Twist.h>
 #include <wheelchair_msgs/wheelVels.h>
 //#include <std_msgs/String.h>
+#include <std_msgs/Bool.h>
 #include <std_msgs/Int16.h>
 #include <std_msgs/Float32.h>
 #include <math.h>
@@ -61,6 +62,7 @@ sensor_msgs::Imu  imu_msg;
 //ros::Subscriber<std_msgs::Float32> rightWheel("/rwheel_vtarget", &onTwist);
 //ros::Subscriber<wheelchair_msgs::wheelVels> WheelVels("/motor_commands", &onTwist);
 ros::Subscriber<wheelchair_msgs::wheelVels> rMotorCommands("/motor_commands", &rMotorCmdsCb);
+ros::Subscriber<std_msgs::Bool> motorRelayEngage("/motor_relay", &motorRelayEngageCb);
 std_msgs::Float32 lw_msg;
 std_msgs::Float32 rw_msg;
 ros::Publisher arduinolw("/arduino/lw", &lw_msg);
@@ -82,6 +84,7 @@ float gz;
 float gt;
 
 bool _connected = false;
+bool relayStatus;
 
 
 void setup() {
@@ -129,6 +132,19 @@ void setupSerial() {
 	Serial.begin(115200);
 }
 
+void motorRelayEngageCb(const std_msgs::Bool& motor_relay_msg) {
+  if (motor_relay_msg.data == true) {
+    analogWrite(leftMotor, motorStopValue);
+    analogWrite(rightMotor, motorStopValue);
+    digitalWrite(motorRelay, HIGH); //relay on
+  }
+  else {
+    digitalWrite(motorRelay, LOW); //relay off
+    analogWrite(leftMotor, motorStopValue);
+    analogWrite(rightMotor, motorStopValue);
+  }
+}
+
 void rMotorCmdsCb(const wheelchair_msgs::wheelVels& motor_commands_msg){
   float x = max(min(motor_commands_msg.leftVel, 1.0f), -1.0f);
   float z = max(min(motor_commands_msg.rightVel, 1.0f), -1.0f);
@@ -157,14 +173,8 @@ void rMotorCmdsCb(const wheelchair_msgs::wheelVels& motor_commands_msg){
   arduinolw.publish( &lw_msg );
   arduinorw.publish( &rw_msg);
 
-  if ((lpwr == 128) && (rpwr == 128)) {
-    digitalWrite(motorRelay, LOW);
-  }
-  else {
-    digitalWrite(motorRelay, HIGH);
-    analogWrite(leftMotor, lpwr);
-    analogWrite(rightMotor, rpwr);
-  }
+  analogWrite(leftMotor, lpwr);
+  analogWrite(rightMotor, rpwr);
   
   
 }
