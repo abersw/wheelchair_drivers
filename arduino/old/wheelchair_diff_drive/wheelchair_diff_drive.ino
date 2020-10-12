@@ -53,6 +53,7 @@ void getImudata();
 void onTwist(const std_msgs::Float32 &lw, const std_msgs::Float32 &rw);
 float mapPwm(float x, float out_min, float out_max);
 void rMotorCmdsCb(const wheelchair_msgs::wheelVels& motor_commands_msg); //added this because of error
+void motorRelayEngageCb(const std_msgs::Bool& motor_relay_msg);
 
 ros::NodeHandle nh;
 wheelchair_msgs::wheelVels motor_commands_msg;
@@ -95,6 +96,7 @@ void setup() {
   nh.advertise(arduinolw);
   nh.advertise(arduinorw);
   nh.subscribe(rMotorCommands);
+  nh.subscribe(motorRelayEngage);
   nh.advertise(imuPub);
   Wire.begin();
   //delay(10);
