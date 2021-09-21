@@ -62,12 +62,12 @@ sensor_msgs::Imu  imu_msg;
 //ros::Subscriber<std_msgs::Float32> leftWheel("/lwheel_vtarget", &onTwist);
 //ros::Subscriber<std_msgs::Float32> rightWheel("/rwheel_vtarget", &onTwist);
 //ros::Subscriber<wheelchair_msgs::wheelVels> WheelVels("/motor_commands", &onTwist);
-ros::Subscriber<wheelchair_msgs::wheelVels> rMotorCommands("/motor_commands", &rMotorCmdsCb);
-ros::Subscriber<std_msgs::Bool> motorRelayEngage("/motor_relay", &motorRelayEngageCb);
+ros::Subscriber<wheelchair_msgs::wheelVels> rMotorCommands("/wheelchair_robot/motor_commands", &rMotorCmdsCb);
+ros::Subscriber<std_msgs::Bool> motorRelayEngage("/wheelchair_robot/motor_relay", &motorRelayEngageCb);
 std_msgs::Float32 lw_msg;
 std_msgs::Float32 rw_msg;
-ros::Publisher arduinolw("/arduino/lw", &lw_msg);
-ros::Publisher arduinorw("/arduino/rw", &rw_msg);
+ros::Publisher arduinolw("/wheelchair_robot/arduino/lw", &lw_msg);
+ros::Publisher arduinorw("/wheelchair_robot/arduino/rw", &rw_msg);
 ros::Publisher imuPub("/wheelchair_robot/imu_raw", &imu_msg);
 char imu_link[] = "imu";
 
