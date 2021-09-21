@@ -17,7 +17,7 @@ int main(int argc, char** argv)
 
   MyRobot robot;
   controller_manager::ControllerManager cm(&robot,nh);
-  ros::Publisher motors_cmds_pub = nh.advertise<wheelchair_msgs::wheelVels>("motor_commands", 1000); //publish topic to arduino rosserial
+  ros::Publisher motors_cmds_pub = nh.advertise<wheelchair_msgs::wheelVels>("/wheelchair_robot/motor_commands", 1000); //publish topic to arduino rosserial
 
 
   ros::AsyncSpinner spinner(4, &queue);
